@@ -168,7 +168,11 @@ def fsdp_main(rank, world_size, args):
     
     # Model creation and move it to device
     model = Net().to(rank)
-    model = FSDP(model)
+    model = FSDP(model,
+        fsdp_auto_wrap_policy=my_auto_wrapping_policy,
+        cpu_offload=CPUOffload.OFFLOAD_TO_CPU,
+        backward_prefetch=BackwardPrefetch.PREFETCH_PARAM,
+    )
     
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
     scheduler = StepLR(optimizer, step_size=1, gamma=args.gamma)
