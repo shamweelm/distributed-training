@@ -8,7 +8,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 from torch.optim.lr_scheduler import StepLR
-from torchvision import datasets, transforms
+from torchvision import transforms
+import torchvision.datasets as datasets
 
 import torch.distributed as dist
 import torch.multiprocessing as mp
@@ -76,7 +77,7 @@ def train(args, model, rank, world_size, train_loader, optimizer, epoch, sampler
         data = data.to(rank)
         target = target.to(rank)
         # Set optimizer gradients to zero
-        optimizer = optimizer.to(rank)
+        optimizer.zero_grad()
         output = model(data)
 
         # Loss computation
