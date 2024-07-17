@@ -140,7 +140,7 @@ def fsdp_main(rank, world_size, args):
         transforms.Normalize((0.1307,), (0.3081,))
     ])
     
-    dataset1 = datasets.MNIST('../data', train=True, download=True,
+    dataset1 = datasets.MNIST('../data', train=True, download=False,
                         transform=transform)
     dataset2 = datasets.MNIST('../data', train=False,
                         transform=transform)
@@ -158,8 +158,8 @@ def fsdp_main(rank, world_size, args):
     train_loader = torch.utils.data.DataLoader(dataset1,**train_kwargs)
     test_loader = torch.utils.data.DataLoader(dataset2, **test_kwargs)
     
-    my_auto_wrapping_policy = functools.partial(
-        size_based_auto_wrap_policy, min_num_params=100
+    my_auto_wrap_policy = functools.partial(
+        size_based_auto_wrap_policy, min_num_params=20000
     )
     torch.cuda.set_device(rank)
     
@@ -169,9 +169,8 @@ def fsdp_main(rank, world_size, args):
     # Model creation and move it to device
     model = Net().to(rank)
     model = FSDP(model,
-        fsdp_auto_wrap_policy=my_auto_wrapping_policy,
-        cpu_offload=CPUOffload.OFFLOAD_TO_CPU,
-        backward_prefetch=BackwardPrefetch.PREFETCH_PARAM,
+        auto_wrap_policy=my_auto_wrap_policy,
+        cpu_offload=CPUOffload(offload_params=True)
     )
     
     optimizer = optim.Adadelta(model.parameters(), lr=args.lr)
